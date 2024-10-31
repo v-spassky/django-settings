@@ -1,57 +1,69 @@
 {
-  "name": "django-settings",
-  "displayName": "Django settings",
-  "description": "Better developer experience for working with `django.conf.settings` object.",
-  "version": "0.1.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/v-spassky/django-settings.git"
-  },
-  "icon": "assets/icon.png",
-  "engines": {
-    "vscode": "^1.94.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onLanguage:python"
-  ],
-  "main": "./out/extension.js",
-  "capabilities": {
-    "definitionProvider": "true"
-  },
-  "contributes": {
-    "configuration": {
-      "properties": {
-        "djangoSettings.settingsFiles": {
-          "type": "array",
-          "default": [],
-          "description": "List of file paths where the extension will search for settings definitions.",
-          "items": {
-            "type": "string"
-          }
+    "name": "django-settings",
+    "displayName": "Django settings",
+    "description": "Better developer experience for working with `django.conf.settings` object.",
+    "version": "0.1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/v-spassky/django-settings.git"
+    },
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "python",
+        "django",
+        "settings",
+        "configuration"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/v-spassky/django-settings",
+    "bugs": {
+        "url": "https://github.com/v-spassky/django-settings/issues"
+    },
+    "icon": "assets/icon.png",
+    "publisher": "VasiliySpassky",
+    "engines": {
+        "vscode": "^1.94.0"
+    },
+    "activationEvents": [
+        "onLanguage:python"
+    ],
+    "main": "./out/extension.js",
+    "capabilities": {
+        "definitionProvider": "true"
+    },
+    "contributes": {
+        "configuration": {
+            "properties": {
+                "djangoSettings.settingsFiles": {
+                    "type": "array",
+                    "default": [],
+                    "description": "List of file paths where the extension will search for settings definitions.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         }
-      }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.94.0",
+        "@types/mocha": "^10.0.9",
+        "@types/node": "20.x",
+        "@typescript-eslint/eslint-plugin": "^8.10.0",
+        "@typescript-eslint/parser": "^8.7.0",
+        "eslint": "^9.13.0",
+        "typescript": "^5.6.3",
+        "@vscode/test-cli": "^0.0.10",
+        "@vscode/test-electron": "^2.4.1"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.94.0",
-    "@types/mocha": "^10.0.9",
-    "@types/node": "20.x",
-    "@typescript-eslint/eslint-plugin": "^8.10.0",
-    "@typescript-eslint/parser": "^8.7.0",
-    "eslint": "^9.13.0",
-    "typescript": "^5.6.3",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
-  }
 }
