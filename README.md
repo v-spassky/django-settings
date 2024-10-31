@@ -1,7 +1,3 @@
-# `Django settings`
-
-Better developer experience for working with `django.conf.settings` object.
-
 ## Configuration
 
 Set `djangoSettings.settingsFiles` to the list of paths where to look for the settings definitions. The paths must be
