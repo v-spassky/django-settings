@@ -11,10 +11,10 @@ Example in `settings.json`:
 
 ```json
 "djangoSettings.settingsFiles": [
-	"config/settings/base.py",
-	"config/settings/local.py",
-	"config/settings/test.py",
-	"config/settings/production.py"
+    "config/settings/base.py",
+    "config/settings/local.py",
+    "config/settings/test.py",
+    "config/settings/production.py"
 ]
 ```
 
