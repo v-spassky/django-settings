@@ -26,3 +26,9 @@ Tired of "Go to definition" on a `settings` object attribute taking you to
 `django.conf._DjangoConfLazyObject.__getattr__`?
 
 ![Go to definition demo](assets/go_to_definition_demo.gif)
+
+### Code completions
+
+Tired of having to look up and copy-paste settings names by hand?
+
+![Go to definition demo](assets/completions_demo.gif)
