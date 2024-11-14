@@ -23,8 +23,14 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
         document: vscode.TextDocument,
         position: vscode.Position,
         _token: vscode.CancellationToken,
-    ): vscode.CompletionItem[] {
+    ): vscode.CompletionItem[] | null {
         logger.debug(`Requested completions on ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
+        const lineText = document.lineAt(position).text
+        const textBeforeCursor = lineText.substring(0, position.character)
+        if (!textBeforeCursor.endsWith('settings.')) {
+            logger.debug('Completion not triggered after `settings.`. No completions provided.')
+            return null
+        }
         const completions = this.settingsNames.map((name) => {
             const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Variable)
             // Make the completion appear at the top of the suggetions list.
