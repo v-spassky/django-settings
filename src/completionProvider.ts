@@ -19,6 +19,23 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
         })
     }
 
+    public provideCompletionItems(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        _token: vscode.CancellationToken,
+    ): vscode.CompletionItem[] {
+        logger.debug(`Requested completions on ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
+        const completions = this.settingsNames.map((name) => {
+            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Variable)
+            // Make the completion appear at the top of the suggetions list.
+            item.sortText = '000' + name
+            return item
+        })
+        const completionsRepresentation = completions.map((completion) => completion.label).join(', ')
+        logger.debug(`Found such completions: ${completionsRepresentation}.`)
+        return completions
+    }
+
     private loadSettings() {
         logger.debug(`Going to (re)discover settings definitions....`)
         const currentDocumentUri = vscode.window.activeTextEditor?.document.uri
@@ -84,22 +101,5 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
             watcher.dispose()
         }
         this.watchers = []
-    }
-
-    public provideCompletionItems(
-        document: vscode.TextDocument,
-        position: vscode.Position,
-        _token: vscode.CancellationToken,
-    ): vscode.CompletionItem[] {
-        logger.debug(`Requested completions on ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
-        const completions = this.settingsNames.map((name) => {
-            const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Variable)
-            // Make the completion appear at the top of the suggetions list.
-            item.sortText = '000' + name
-            return item
-        })
-        const completionsRepresentation = completions.map((completion) => completion.label).join(', ')
-        logger.debug(`Found such completions: ${completionsRepresentation}.`)
-        return completions
     }
 }
