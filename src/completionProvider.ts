@@ -89,7 +89,7 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
     public provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken,
+        _token: vscode.CancellationToken,
     ): vscode.CompletionItem[] {
         logger.debug(`Requested completions on ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
         const completions = this.settingsNames.map((name) => {
