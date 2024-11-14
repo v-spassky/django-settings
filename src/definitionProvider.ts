@@ -10,6 +10,7 @@ export class DjangoSettingsDefinitionProvider implements vscode.DefinitionProvid
         _token: vscode.CancellationToken,
     ): vscode.Location[] | null {
         logger.debug(`Requested definition of ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
+        // TODO: infer settings object name instead of hard-coding it).
         const range = document.getWordRangeAtPosition(position, /settings\.\w+/)
         if (!range) {
             return null

@@ -27,6 +27,7 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
         logger.debug(`Requested completions on ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
         const lineText = document.lineAt(position).text
         const textBeforeCursor = lineText.substring(0, position.character)
+        // TODO: infer settings object name instead of hard-coding it).
         if (!textBeforeCursor.endsWith('settings.')) {
             logger.debug('Completion not triggered after `settings.`. No completions provided.')
             return null
@@ -44,6 +45,7 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
 
     private loadSettings() {
         logger.debug(`Going to (re)discover settings definitions....`)
+        // TODO: refactor workspace folder inference since no document is ever active when editing settings.
         const currentDocumentUri = vscode.window.activeTextEditor?.document.uri
         if (!currentDocumentUri) {
             logger.warning('Could not load settings definitions because there is no currently active editor.')
@@ -78,6 +80,7 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
     }
 
     private watchSettingsFiles() {
+        // TODO: refactor workspace folder inference since no document is ever active when editing settings.
         const currentDocumentUri = vscode.window.activeTextEditor?.document.uri
         if (!currentDocumentUri) {
             logger.warning('Could not load settings definitions because there is no currently active editor.')
@@ -97,6 +100,7 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
             const watcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(workspaceFolder, relativePath),
             )
+            // TODO: don't reload settings from all files, just from changed ones.
             watcher.onDidChange(() => this.loadSettings())
             watcher.onDidCreate(() => this.loadSettings())
             watcher.onDidDelete(() => this.loadSettings())

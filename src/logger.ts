@@ -32,6 +32,7 @@ class Logger {
 
     private formatMessage(level: LogLevel, message: string): string {
         const timestamp = new Date().toISOString()
+        // TODO: would be cool to add colors (yellow for warnings, red for errors).
         return `${timestamp} [${level}] ${message}`
     }
 
