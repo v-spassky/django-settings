@@ -46,8 +46,8 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(currentDocumentUri)
         if (!workspaceFolder) {
             logger.warning(
-                'Could not load settings definitions because currently active editor\'s document doesn\'t match any '
-                + 'workspace folder.'
+                "Could not load settings definitions because currently active editor's document doesn't match any " +
+                    'workspace folder.',
             )
             return
         }
@@ -80,15 +80,17 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(currentDocumentUri)
         if (!workspaceFolder) {
             logger.warning(
-                'Could not load settings definitions because currently active editor\'s document doesn\'t match any '
-                + 'workspace folder.'
+                "Could not load settings definitions because currently active editor's document doesn't match any " +
+                    'workspace folder.',
             )
             return
         }
         const settingsFiles: string[] = vscode.workspace.getConfiguration().get('djangoSettings.settingsFiles', [])
         this.disposeWatchers()
         for (const relativePath of settingsFiles) {
-            const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(workspaceFolder, relativePath))
+            const watcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(workspaceFolder, relativePath),
+            )
             watcher.onDidChange(() => this.loadSettings())
             watcher.onDidCreate(() => this.loadSettings())
             watcher.onDidDelete(() => this.loadSettings())
