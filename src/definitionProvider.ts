@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
+import { logger } from './logger'
 
 export class DjangoSettingsDefinitionProvider implements vscode.DefinitionProvider {
     public provideDefinition(
@@ -8,6 +9,7 @@ export class DjangoSettingsDefinitionProvider implements vscode.DefinitionProvid
         position: vscode.Position,
         _token: vscode.CancellationToken,
     ): vscode.Location[] | null {
+        logger.debug(`Requested definition of ${document.uri.fsPath}:${position.line} (column ${position.character}).`)
         const range = document.getWordRangeAtPosition(position, /settings\.\w+/)
         if (!range) {
             return null
@@ -22,7 +24,7 @@ export class DjangoSettingsDefinitionProvider implements vscode.DefinitionProvid
         for (const relativeSettingFilePath of settingsFiles) {
             const settingsFilePath = path.join(workspaceFolder.uri.fsPath, relativeSettingFilePath)
             if (!fs.existsSync(settingsFilePath)) {
-                // TODO: emit a warning notification.
+                logger.warning(`Could not find ${settingsFilePath}!`)
                 continue
             }
             const fileContent = fs.readFileSync(settingsFilePath, 'utf-8')
@@ -36,6 +38,10 @@ export class DjangoSettingsDefinitionProvider implements vscode.DefinitionProvid
                 }
             }
         }
+        const locationsRepresentation = locations
+            .map((location) => `${location.uri.fsPath}:${location.range.start.line}`)
+            .join(', ')
+        logger.debug(`Found definitions at these locations: ${locationsRepresentation}.`)
         return locations.length > 0 ? locations : null
     }
 }
