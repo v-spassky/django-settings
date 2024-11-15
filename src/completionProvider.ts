@@ -4,8 +4,8 @@ import * as path from 'path'
 import { logger } from './logger'
 
 export class DjangoSettingsCompletionProvider implements vscode.CompletionItemProvider {
-    private settingsNames: string[] = []
-    private watchers: vscode.FileSystemWatcher[] = []
+    private settingsNames: Map<string, string[]> = new Map()
+    private watchers: Map<string, vscode.FileSystemWatcher[]> = new Map()
 
     constructor() {
         this.loadSettings()
@@ -32,7 +32,22 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
             logger.debug('Completion not triggered after `settings.`. No completions provided.')
             return null
         }
-        const completions = this.settingsNames.map((name) => {
+        const activeWorkspace = vscode.workspace.getWorkspaceFolder(document.uri)
+        if (!activeWorkspace) {
+            logger.debug(
+                "Could not provide any completions because the dequestng document doesn't match any workspace folder.",
+            )
+            return null
+        }
+        const settingsNames = this.settingsNames.get(activeWorkspace.name)
+        if (settingsNames === undefined) {
+            logger.debug(
+                "Could not provide any completions because active workspace doesn't have any previously discovered " +
+                    'settings names.',
+            )
+            return null
+        }
+        const completions = settingsNames.map((name) => {
             const item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Variable)
             // Make the completion appear at the top of the suggetions list.
             item.sortText = '000' + name
@@ -44,74 +59,79 @@ export class DjangoSettingsCompletionProvider implements vscode.CompletionItemPr
     }
 
     private loadSettings() {
-        logger.debug(`Going to (re)discover settings definitions....`)
-        // TODO: refactor workspace folder inference since no document is ever active when editing settings.
-        const currentDocumentUri = vscode.window.activeTextEditor?.document.uri
-        if (!currentDocumentUri) {
-            logger.warning('Could not load settings definitions because there is no currently active editor.')
+        if (!vscode.workspace.workspaceFolders) {
+            logger.warning('Could not load settings definitions because no workspace folder is open.')
             return
         }
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(currentDocumentUri)
-        if (!workspaceFolder) {
-            logger.warning(
-                "Could not load settings definitions because currently active editor's document doesn't match any " +
-                    'workspace folder.',
+        for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+            const settingsFiles: string[] = vscode.workspace
+                .getConfiguration('djangoSettings', workspaceFolder)
+                .get('settingsFiles', [])
+            const settingsNamesSet = new Set<string>()
+            for (const relativePath of settingsFiles) {
+                const settingsFilePath = path.join(workspaceFolder.uri.fsPath, relativePath)
+                if (!fs.existsSync(settingsFilePath)) {
+                    logger.warning(`Could not find ${settingsFilePath}!`)
+                    continue
+                }
+                const content = fs.readFileSync(settingsFilePath, 'utf-8')
+                const settingPattern = /^\s*([\w]+)\s*=\s*/gm
+                let match
+                while ((match = settingPattern.exec(content)) !== null) {
+                    settingsNamesSet.add(match[1])
+                }
+            }
+            this.settingsNames.set(workspaceFolder.name, Array.from(settingsNamesSet))
+            const settingsNamesRepresentation = this.settingsNames.get(workspaceFolder.name)!.join(', ')
+            logger.debug(
+                `Discovered such settings definitions: ${settingsNamesRepresentation} for the ` +
+                    `${workspaceFolder.name} workspace.`,
             )
-            return
         }
-        const settingsFiles: string[] = vscode.workspace.getConfiguration().get('djangoSettings.settingsFiles', [])
-        const settingsNamesSet = new Set<string>()
-        for (const relativePath of settingsFiles) {
-            const settingsFilePath = path.join(workspaceFolder.uri.fsPath, relativePath)
-            if (!fs.existsSync(settingsFilePath)) {
-                logger.warning(`Could not find ${settingsFilePath}!`)
-                continue
-            }
-            const content = fs.readFileSync(settingsFilePath, 'utf-8')
-            const settingPattern = /^\s*([\w]+)\s*=\s*/gm
-            let match
-            while ((match = settingPattern.exec(content)) !== null) {
-                settingsNamesSet.add(match[1])
-            }
-        }
-        this.settingsNames = Array.from(settingsNamesSet)
-        const settingsNamesRepresentation = this.settingsNames.join(', ')
-        logger.debug(`Discovered such settings definitions: ${settingsNamesRepresentation}.`)
     }
 
     private watchSettingsFiles() {
-        // TODO: refactor workspace folder inference since no document is ever active when editing settings.
-        const currentDocumentUri = vscode.window.activeTextEditor?.document.uri
-        if (!currentDocumentUri) {
-            logger.warning('Could not load settings definitions because there is no currently active editor.')
+        if (!vscode.workspace.workspaceFolders) {
+            logger.warning('Could not load settings definitions because no workspace folder is open.')
             return
         }
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(currentDocumentUri)
-        if (!workspaceFolder) {
-            logger.warning(
-                "Could not load settings definitions because currently active editor's document doesn't match any " +
-                    'workspace folder.',
+        for (const workspaceFolder of vscode.workspace.workspaceFolders) {
+            const settingsFiles: string[] = vscode.workspace
+                .getConfiguration('djangoSettings', workspaceFolder)
+                .get('settingsFiles', [])
+            this.disposeWorkspaceWatchers(workspaceFolder.name)
+            for (const relativePath of settingsFiles) {
+                const watcher = vscode.workspace.createFileSystemWatcher(
+                    new vscode.RelativePattern(workspaceFolder, relativePath),
+                )
+                // TODO: don't reload settings from all files, just from changed ones.
+                watcher.onDidChange(() => this.loadSettings())
+                watcher.onDidCreate(() => this.loadSettings())
+                watcher.onDidDelete(() => this.loadSettings())
+                if (!this.watchers.has(workspaceFolder.name)) {
+                    this.watchers.set(workspaceFolder.name, [])
+                }
+                this.watchers.get(workspaceFolder.name)!.push(watcher)
+            }
+            logger.debug(
+                `Now there are ${this.watchers.get(workspaceFolder.name)!.length} watcher(s) for the ` +
+                    `${workspaceFolder.name} workspace.`,
             )
-            return
-        }
-        const settingsFiles: string[] = vscode.workspace.getConfiguration().get('djangoSettings.settingsFiles', [])
-        this.disposeWatchers()
-        for (const relativePath of settingsFiles) {
-            const watcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(workspaceFolder, relativePath),
-            )
-            // TODO: don't reload settings from all files, just from changed ones.
-            watcher.onDidChange(() => this.loadSettings())
-            watcher.onDidCreate(() => this.loadSettings())
-            watcher.onDidDelete(() => this.loadSettings())
-            this.watchers.push(watcher)
         }
     }
 
-    private disposeWatchers() {
-        for (const watcher of this.watchers) {
+    private disposeWorkspaceWatchers(workspaceName: string) {
+        const watchers = this.watchers.get(workspaceName)
+        if (watchers === undefined) {
+            logger.debug(
+                `Could not dispose file watchers for the ${workspaceName} workspace because it has no registered ` +
+                    'watchers.',
+            )
+            return
+        }
+        for (const watcher of watchers) {
             watcher.dispose()
         }
-        this.watchers = []
+        this.watchers.set(workspaceName, [])
     }
 }

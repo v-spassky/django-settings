@@ -20,7 +20,9 @@ export class DjangoSettingsDefinitionProvider implements vscode.DefinitionProvid
         if (!workspaceFolder) {
             return null
         }
-        const settingsFiles: string[] = vscode.workspace.getConfiguration().get('djangoSettings.settingsFiles', [])
+        const settingsFiles: string[] = vscode.workspace
+            .getConfiguration('djangoSettings', workspaceFolder)
+            .get('settingsFiles', [])
         const locations: vscode.Location[] = []
         for (const relativeSettingFilePath of settingsFiles) {
             const settingsFilePath = path.join(workspaceFolder.uri.fsPath, relativeSettingFilePath)

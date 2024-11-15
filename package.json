@@ -37,6 +37,7 @@
         "configuration": {
             "properties": {
                 "djangoSettings.settingsFiles": {
+                    "scope": "resource",
                     "type": "array",
                     "default": [],
                     "description": "List of file paths where the extension will search for settings definitions.",
